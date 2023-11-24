@@ -1,0 +1,13 @@
+1.image_download
+1.ppi_download
+1.ppi_download_filtered
+2.image_embedding/
+2.image_embedding_filtered/
+2.ppi_embedding/
+2.ppi_embedding_filtered/
+3.coembedding/
+4.hierarchy/
+4.hierarchy_old/
+5.eval_hierarchy/
+examples/
+U20S_ref/
