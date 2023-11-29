@@ -1,5 +1,6 @@
 from pathlib import Path
 
+DEVICES = "3"
 CELLMAPS = Path("/home/ishang/miniconda3/envs/music/lib/python3.9/site-packages/")
 REPO = Path.cwd()
 INPUT_FOLDER = REPO / "0.U2OS_ref"
@@ -29,7 +30,7 @@ PASS_NODE2VEC = False
 PASS_COEMBEDDING = False
 PASS_HIERARCHY = False
 
-SKIP_SC = True
+SKIP_SC = False
 SKIP_SETUP = False
 SKIP_NODE2VEC = False
 SKIP_COEMBEDDING = False

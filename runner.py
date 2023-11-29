@@ -1,6 +1,7 @@
 import os
+import config
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
+os.environ["CUDA_VISIBLE_DEVICES"] = config.DEVICES
 
 import argparse
 
@@ -17,7 +18,6 @@ from cellmaps_ppi_embedding import cellmaps_ppi_embeddingcmd
 from cellmaps_coembedding import cellmaps_coembeddingcmd
 from cellmaps_generate_hierarchy import cellmaps_generate_hierarchycmd
 
-import config
 from cellmaps_utils import constants # Super useful file to understand what's going on
 
 # ================================
@@ -211,8 +211,11 @@ if not config.SKIP_COEMBEDDING:
         ppi_embedding_args.append("--fake_embedder")
         warn("Running in DEV_NODE2VEC mode, will generate fake embedding")
 
-    print(f"With args:\n{ppi_embedding_args}")
-    cellmaps_ppi_embeddingcmd.main(ppi_embedding_args)
+    if not proc_PPI_EMBEDDINGS_FOLDER.exists():
+        print(f"With args:\n{ppi_embedding_args}")
+        cellmaps_ppi_embeddingcmd.main(ppi_embedding_args)
+    else:
+        print("Skipping PPI embedding because output directory already exists")
 else:
     print("Skipping PPI embedding")
 
