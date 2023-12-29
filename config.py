@@ -1,19 +1,21 @@
 from pathlib import Path
 
-DEVICES = "3"
+DEVICES = "7"
 CELLMAPS = Path("/home/ishang/miniconda3/envs/music/lib/python3.9/site-packages/")
 REPO = Path.cwd()
 INPUT_FOLDER = REPO / "0.U2OS_ref"
 # INPUT_FOLDER = REPO / "0.example"
+CC_PHASE = "G1/S"
 
 SC_EMBEDDINGS_FOLDER = REPO / "1.sc_embeddings"
 
 SC_EMBEDDINGS_FILE = SC_EMBEDDINGS_FOLDER / "u2os_embeddings.npy"
-SC_LABELS_FILE = SC_EMBEDDINGS_FOLDER / "u2os_labels.csv"
+# SC_LABELS_FILE = SC_EMBEDDINGS_FOLDER / "u2os_labels.csv"
+SC_LABELS_FILE = SC_EMBEDDINGS_FOLDER / "new_labels_df.csv"
 
 WALK_LENGTH, N_WALKS = 80, 10
 P, Q = 2, 1
-N_WORKERS = 10
+N_WORKERS = N_WALKS
 
 COEMBEDDING_LATENT_DIM = 128
 
@@ -31,7 +33,14 @@ PASS_COEMBEDDING = False
 PASS_HIERARCHY = False
 
 SKIP_SC = False
+# SKIP_SC = True
 SKIP_SETUP = False
+# SKIP_SETUP = True
 SKIP_NODE2VEC = False
+# SKIP_NODE2VEC = True
 SKIP_COEMBEDDING = False
+# SKIP_COEMBEDDING = True
 SKIP_HIERARCHY = False
+# SKIP_HIERARCHY = True
+SKIP_EVAL = False
+# SKIP_EVAL = True

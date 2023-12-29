@@ -9,6 +9,7 @@ import time
 import shutil
 import numpy as np
 import pandas as pd
+import pickle as pkl
 from tqdm import tqdm
 from pathlib import Path
 from warnings import warn
@@ -17,6 +18,7 @@ from cellmaps_ppidownloader import cellmaps_ppidownloadercmd
 from cellmaps_ppi_embedding import cellmaps_ppi_embeddingcmd
 from cellmaps_coembedding import cellmaps_coembeddingcmd
 from cellmaps_generate_hierarchy import cellmaps_generate_hierarchycmd
+from cellmaps_hierarchyeval import cellmaps_hierarchyevalcmd
 
 from cellmaps_utils import constants # Super useful file to understand what's going on
 
@@ -27,13 +29,13 @@ from cellmaps_utils import constants # Super useful file to understand what's go
 # Parse Arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--checkpoint", help="Checkpoint to resume from, give the folder name")
-parser.add_argument("-s", "--stage", help="Stage to resume from, 'coembedding' or 'hierarchy'")
+parser.add_argument("-s", "--stage", help="Stage to resume from, 'coembedding', 'hierarchy', or 'eval'")
 args = parser.parse_args()
 
 if args.stage is not None:
     if args.checkpoint is None:
         raise ValueError("Must specify checkpoint to resume from")
-    if args.stage not in ["coembedding", "hierarchy"]:
+    if args.stage not in ["coembedding", "hierarchy", "eval"]:
         raise ValueError("Invalid stage to resume from")
 
 if args.checkpoint is not None:
@@ -53,6 +55,12 @@ if args.checkpoint is not None:
         config.SKIP_SETUP = True
         config.SKIP_NODE2VEC = True
         config.SKIP_COEMBEDDING = True
+    elif args.stage == "eval":
+        print("Resuming from eval stage")
+        config.SKIP_SETUP = True
+        config.SKIP_NODE2VEC = True
+        config.SKIP_COEMBEDDING = True
+        config.SKIP_HIERARCHY = True
     else:
         raise ValueError("Invalid stage to resume from")
 
@@ -127,15 +135,23 @@ else:
 
 # Select Genes
 if not config.SKIP_SETUP:
-    print(make_header("Selecting Genes and Filtering PPI and SC Embedding Data"))
+    if config.CC_PHASE is not None:
+        u2os_labels = u2os_labels[u2os_labels["class"] == config.CC_PHASE]
+        print(f"Selected {len(u2os_labels)} cells for {config.CC_PHASE} phase")
+        u2os_embeddings = u2os_embeddings[u2os_labels.index.values]
 
+    print(make_header("Selecting Genes and Filtering PPI and SC Embedding Data"))
     u2os_hpa_genes = set(u2os_labels["gene_names"].unique())
     u2os_bioplex = pd.read_csv(config.INPUT_FOLDER / "edgelist.tsv", sep="\t")
     u2os_bioplex_genes = set(u2os_bioplex["Symbol1"].unique()) | set(u2os_bioplex["Symbol2"].unique())
-    genes = u2os_hpa_genes & u2os_bioplex_genes
+    if config.CC_PHASE is None:
+        genes = u2os_hpa_genes & u2os_bioplex_genes
+    else:
+        genes = pkl.load(open(config.SC_EMBEDDINGS_FOLDER / "genes.pkl", "rb"))
+        assert genes.intersection(u2os_hpa_genes) == genes
     gene_list_file = OUTPUT_FOLDER / "gene_list.txt"
     with open(gene_list_file, "w") as f:
-        f.write("\n".join(genes))
+        f.write("\n".join(list(genes)))
     print(f"Selected {len(genes)} genes.")
 
     # Filter PPI data for selected genes
@@ -270,3 +286,21 @@ if not config.SKIP_HIERARCHY:
     cellmaps_generate_hierarchycmd.main(hierarchy_gen_args)
 else:
     print("Skipping Hierarchy Generation")
+
+# ================================================
+# =============== Eval Hierarchy =================
+# ================================================
+print(make_header(f"Running Hierarchy Evaluation"))
+proc_EVAL_FOLDER = OUTPUT_FOLDER / constants.HIERARCHYEVAL_STEP_DIR
+hierarchy_eval_args = [
+    "dummy_program_name",
+    str(proc_EVAL_FOLDER),
+    cellmaps_hierarchyevalcmd.HIERARCHYDIR, str(proc_HIERARCHY_FOLDER),
+    "--verbose"
+]
+
+if not config.SKIP_EVAL:
+    print(f"With args:\n{hierarchy_eval_args}")
+    cellmaps_hierarchyevalcmd.main(hierarchy_eval_args)
+else:
+    print("Skipping Hierarchy Evaluation")
